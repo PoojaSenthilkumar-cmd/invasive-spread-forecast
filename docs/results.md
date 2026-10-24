@@ -150,3 +150,39 @@ which is about two-thirds of the base rate.
 Full numbers: `results/metrics.json`, `results/summary_h1.csv`, `results/metrics_by_effort_decile.csv`;
 figures: `reports/figures/reliability_h1.png`, `reports/figures/effort_decile_metrics.png`.
 The leakage test output is in `results/leakage_test_output.txt`.
+
+## 2026 holdout (evaluated once, pre-registered)
+
+The model list, metrics and comparisons were committed in `results/holdout_preregistration.json`
+before the run. Every model was refit on all labels up to 2025 using the frozen hyperparameters and
+the 2019-2021 calibrators, then scored once on first sightings in 2026.
+
+The first attempt crashed with NaN labels (a nullable-integer bug) before any metric was computed or
+printed. It was fixed and re-run once.
+
+2026 is a partial year (GBIF snapshot from October 2026): 64,407 at-risk cells, **508 first
+sightings** (base rate 0.79%). The low-effort strata (deciles 1-3) contain only **9** first
+sightings, so the low-effort holdout numbers carry almost no information.
+
+| model (h=1, 2026) | PR-AUC [95% CI] | ROC-AUC | P@100 | P@500 | P@2000 | PR-AUC minus ranked adjacency [95% CI] |
+|---|---|---|---|---|---|---|
+| spread GBM, approved default | 0.049 [0.031, 0.077] | 0.831 | 0.12 | 0.108 | 0.066 | -0.001 [-0.018, +0.025] |
+| ablation: no bias correction | **0.091 [0.061, 0.137]** | 0.899 | 0.18 | 0.168 | 0.102 | **+0.041 [+0.018, +0.082]** |
+| ablation: first-run TG (recorded cells only) | 0.046 [0.031, 0.074] | 0.826 | 0.13 | 0.114 | 0.061 | -0.003 [-0.018, +0.020] |
+| ablation: effort features also neutralised | 0.082 [0.052, 0.130] | 0.875 | 0.20 | 0.158 | 0.091 | +0.032 [+0.005, +0.079] |
+| ablation: dynamic features only | 0.070 [0.047, 0.107] | 0.847 | 0.13 | 0.158 | 0.090 | +0.020 [+0.002, +0.051] |
+| ablation: no dynamic features (static GBM) | 0.018 [0.015, 0.022] | 0.770 | 0.00 | 0.008 | 0.013 | -0.032 [-0.048, -0.022] |
+| static SDM, logistic / random forest | 0.023 / 0.022 | 0.739 / 0.723 | 0.02 / 0.04 | 0.056 / 0.046 | 0.037 / 0.037 | -0.027 / -0.028 |
+| adjacency, binary | 0.021 | 0.788 | 0.02 | 0.020 | 0.017 | -0.029 [-0.045, -0.019] |
+| **adjacency, ranked** | 0.050 [0.039, 0.067] | 0.863 | 0.12 | 0.084 | 0.070 | - |
+| distance to front | 0.026 | 0.837 | 0.02 | 0.020 | 0.024 | -0.024 [-0.039, -0.015] |
+| random | 0.008 | 0.499 | 0.01 | 0.008 | 0.006 | -0.042 |
+
+Reading the holdout:
+- It confirms the test-period picture. The approved default only ties ranked adjacency, while the no-bias-correction model beats it (CI excludes 0).
+- The no-bias-correction model has the strongest correlation with 2026 recording effort (Spearman 0.42 vs 0.13 for the default and for adjacency).
+- On the 9 low-effort first sightings no model can be distinguished from adjacency.
+
+Outputs: `results/holdout_metrics.json`, `results/holdout_by_effort_decile.csv`, and
+`results/forecast_from_2025.parquet` (per-cell P(first sighting within 1/2/3 years after 2025) from
+the default model; not committed, regenerate with `make holdout --force`).
