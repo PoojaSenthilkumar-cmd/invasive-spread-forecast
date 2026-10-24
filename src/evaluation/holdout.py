@@ -52,7 +52,9 @@ def holdout_rows(cfg: dict[str, Any], table: pd.DataFrame) -> pd.DataFrame:
     rows = table[table["window"] == end_w].copy()
     panel = pd.read_parquet(panel_path(cfg), columns=["cell_id", "first_detection_window"])
     first = panel.drop_duplicates("cell_id").set_index("cell_id")["first_detection_window"]
-    rows["y_h1"] = (rows["cell_id"].map(first) == end_w + 1).astype(np.float32)
+    first_w = rows["cell_id"].map(first).astype(float)  # nullable Int64 -> NaN for "never"
+    rows["y_h1"] = (first_w == end_w + 1).astype(np.float32)
+    assert rows["y_h1"].notna().all()
     eff = build_effort(cfg)
     e = eff[eff["window"] == end_w + 1].set_index("cell_id")["effort_insecta"]
     rows["meta_effort_target"] = rows["cell_id"].map(e).fillna(0).astype(np.float32)
