@@ -58,23 +58,23 @@ def effort_sql(cfg: dict[str, Any]) -> str:
     countries = ", ".join(f"'{c}'" for c in cfg["region"]["countries"])
     bor = ", ".join(f"'{b}'" for b in e["basis_of_record"])
     min_lon, min_lat, max_lon, max_lat = cfg["region"]["bbox"]
-    key = cfg["species"]["gbif_taxon_key"]
+    species = cfg["species"]["scientific_name"]
     return (
         'SELECT "year", '
         'CASE WHEN "month" IS NULL THEN 0 WHEN "month" <= 6 THEN 1 ELSE 2 END AS half, '
         "GBIF_EEARGCode(1000, decimalLatitude, decimalLongitude, 0) AS eeaCellCode, "
         "COUNT(*) AS n_insecta, "
-        f"SUM(CASE WHEN orderKey = {e['hymenoptera_order_key']} THEN 1 ELSE 0 END) "
+        f"SUM(CASE WHEN \"order\" = '{e['order_name']}' THEN 1 ELSE 0 END) "
         "AS n_hymenoptera, "
         "COUNT(DISTINCT recordedBy) AS n_observers "
         "FROM occurrence "
-        f"WHERE classKey = {e['class_key']} "
+        f"WHERE \"class\" = '{e['class_name']}' "
         f"AND countryCode IN ({countries}) "
         f'AND "year" >= {e["min_year"]} '
         "AND hasCoordinate = TRUE AND hasGeospatialIssues = FALSE "
         f"AND decimalLongitude >= {min_lon} AND decimalLongitude <= {max_lon} "
         f"AND decimalLatitude >= {min_lat} AND decimalLatitude <= {max_lat} "
-        f"AND (speciesKey IS NULL OR speciesKey <> {key}) "
+        f"AND (species IS NULL OR species <> '{species}') "
         f"AND basisOfRecord IN ({bor}) "
         'GROUP BY "year", half, eeaCellCode'
     )

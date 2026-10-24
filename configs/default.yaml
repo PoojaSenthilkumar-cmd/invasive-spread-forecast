@@ -28,8 +28,10 @@ gbif:
   # Target-group effort cube (GBIF SQL download): all Insecta records excluding the focal species,
   # aggregated per EEA 1 km reference-grid cell x year x half-year.
   effort:
-    class_key: 216          # Insecta
-    hymenoptera_order_key: 1457
+    # GBIF SQL downloads resolve numeric taxon keys against the default (COL XR) checklist, so
+    # backbone keys such as classKey=216 match nothing; filter on names instead.
+    class_name: Insecta
+    order_name: Hymenoptera
     min_year: 2000
     basis_of_record: [HUMAN_OBSERVATION, MACHINE_OBSERVATION, OCCURRENCE]
 
