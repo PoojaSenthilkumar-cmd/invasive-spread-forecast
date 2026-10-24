@@ -9,6 +9,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np
 import pandas as pd
 import pydeck as pdk
@@ -111,7 +115,9 @@ def map_tab(layers: pd.DataFrame, labels: dict) -> None:
         "Forecast layer",
         ORDER,
         index=0,
-        format_func=lambda k: f"{NAMES[k]}: {labels['layers'][k]['title']}",
+        format_func=lambda k: (
+            labels["layers"][k]["title"] if k == "ADJ" else f"{k}: {labels['layers'][k]['title']}"
+        ),
         horizontal=False,
     )
     lab = labels["layers"][key]
@@ -123,6 +129,11 @@ def map_tab(layers: pd.DataFrame, labels: dict) -> None:
     with c1:
         show_rest = st.checkbox("Show cells ranked below 10,000", value=False)
         show_occ = st.checkbox("Show cells occupied by 2025", value=True)
+        render = st.radio(
+            "Map renderer",
+            ["Static image", "Interactive (WebGL)"],
+            help="The interactive map needs WebGL in the browser; the static image always works.",
+        )
         st.markdown("**Rank in the 2026 forecast**")
         for _, name, rgb in CLASSES:
             st.markdown(
@@ -140,6 +151,13 @@ def map_tab(layers: pd.DataFrame, labels: dict) -> None:
             "Probabilities are isotonic-calibrated on 2019-2021, when the base rate was lower, so "
             "they under-state the risk; use the ranks."
         )
+    if render == "Static image":
+        with c2:
+            st.markdown(f"#### Layer {NAMES[key]}: {lab['title']}")
+            st.pyplot(
+                static_map(layers, key, show_rest, show_occ, f"Layer {NAMES[key]}: {lab['title']}")
+            )
+        return
     risk = colour(layers, key)
     if not show_rest:
         risk = risk[risk["rank"] <= 10000]
@@ -164,6 +182,47 @@ def map_tab(layers: pd.DataFrame, labels: dict) -> None:
             ),
             height=640,
         )
+
+
+@st.cache_data
+def static_map(layers: pd.DataFrame, key: str, show_rest: bool, show_occ: bool, title: str):
+    """Static map image (no WebGL needed) of one layer, same colours as the interactive map."""
+    risk = colour(layers, key)
+    fig, ax = plt.subplots(figsize=(9, 9), dpi=110)
+    ax.scatter(layers["lon"], layers["lat"], s=0.6, c="#e8e8e8", marker="s", linewidths=0)
+    if show_occ:
+        occ = layers[layers["status"] != "at risk"]
+        ax.scatter(
+            occ["lon"],
+            occ["lat"],
+            s=0.8,
+            c=[np.array(OCC_RGB) / 255],
+            marker="s",
+            linewidths=0,
+            label="occupied by 2025",
+        )
+    for upper, name, rgb in reversed(CLASSES):
+        if name == "rest" and not show_rest:
+            continue
+        d = risk[risk["band"] == name]
+        ax.scatter(
+            d["lon"],
+            d["lat"],
+            s=2.5 if upper <= 2000 else 1.2,
+            c=[np.array(rgb) / 255],
+            marker="s",
+            linewidths=0,
+            label=name,
+        )
+    ax.set_aspect(1 / np.cos(np.deg2rad(47.0)))
+    ax.set_xlim(-11, 15.5)
+    ax.set_ylim(35.5, 58.5)
+    ax.set_xlabel("longitude")
+    ax.set_ylabel("latitude")
+    ax.set_title(title, fontsize=10)
+    ax.legend(loc="lower right", markerscale=6, fontsize=8, title="rank in 2026 forecast")
+    fig.tight_layout()
+    return fig
 
 
 def _scatter(df: pd.DataFrame) -> pdk.Layer:
@@ -218,7 +277,7 @@ def eval_tab(labels: dict, hold: dict, summary: pd.DataFrame) -> None:
                 "Spearman with effort": f"{v['spearman_with']['meta_effort_target']:.2f}",
             }
         )
-    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch", height=35 * len(rows) + 38)
 
     with st.expander("Main test 2022-2025 and validation 2019-2021 (Phase 5)"):
         cols = [
@@ -233,7 +292,7 @@ def eval_tab(labels: dict, hold: dict, summary: pd.DataFrame) -> None:
             "low_precision@100",
             "rho_effort",
         ]
-        st.dataframe(summary[cols].round(4), hide_index=True, use_container_width=True)
+        st.dataframe(summary[cols].round(4), hide_index=True, width="stretch")
         val = pd.DataFrame(
             {
                 k: {"model": v["model"]} | {m: round(x, 4) for m, x in v["validation"].items()}
@@ -241,7 +300,7 @@ def eval_tab(labels: dict, hold: dict, summary: pd.DataFrame) -> None:
             }
         ).T
         st.markdown("Validation (out-of-fold 2019-2021) for the dashboard layers")
-        st.dataframe(val, use_container_width=True)
+        st.dataframe(val, width="stretch")
         for f in ["effort_decile_metrics.png", "reliability_h1.png"]:
             if (FIG / f).exists():
                 st.image(str(FIG / f))

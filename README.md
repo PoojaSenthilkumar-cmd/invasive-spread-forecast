@@ -7,7 +7,7 @@ observer-bias covariates.
 **Status: Phases 1-5 are done** (data, cleaning/grid/panel/bias correction, causal features,
 models and baselines, chronological evaluation, and the single 2026 holdout run); see
 `docs/results.md`. Run `make features train evaluate`, then `make holdout` once (it refuses to
-re-run). The Phase 6 dashboard is not implemented yet (`make dashboard` exits with a message).
+re-run). Dashboard (Phase 6): `make dashboard` (Streamlit, http://localhost:8501). It shows the frozen 1-year forecast layers from the end of 2025: C (bias-corrected, spread inputs only; default), A (no bias correction), B (approved default) and the adjacency baseline, each labelled with validation/test precision@k. An Evaluation tab shows the 2026 holdout (scored once, frozen). `make dashboard-data` rebuilds `results/dashboard_layers.parquet` from the frozen fits and checks them against the holdout forecast; the committed file lets the dashboard run without the raw data.
 
 ## Quick start
 
