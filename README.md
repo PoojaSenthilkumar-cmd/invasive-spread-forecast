@@ -4,9 +4,10 @@ This project forecasts where *Vespa velutina* (Asian hornet) will be sighted **n
 Europe, using time-ordered GBIF citizen-science records combined with climate, land-cover and
 observer-bias covariates.
 
-**Status: Phases 1 (data acquisition) and 2 (cleaning, grid, panel, bias correction) are
-done.** Phases 3-6 (features, models, evaluation, dashboard) are not started; the `make train`,
-`make evaluate` and `make dashboard` targets exit with a message saying so.
+**Status: Phases 1-5 are done** (data, cleaning/grid/panel/bias correction, causal features,
+models and baselines, chronological evaluation, and the single 2026 holdout run); see
+`docs/results.md`. Run `make features train evaluate`, then `make holdout` once (it refuses to
+re-run). The Phase 6 dashboard is not implemented yet (`make dashboard` exits with a message).
 
 ## Quick start
 
