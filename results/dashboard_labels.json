@@ -1,0 +1,108 @@
+{
+  "layers": {
+    "C": {
+      "model": "ablation: dynamic features only",
+      "title": "Bias-corrected spread model, spread inputs only (dashboard default)",
+      "what": "LightGBM on neighbour and spread-front features only. Target-group negatives and inverse-effort weights; no effort, climate, land-use, population or road inputs.",
+      "validation": {
+        "pr_auc": 0.04065351303112201,
+        "precision@100": 0.08,
+        "precision@500": 0.06333333333333334,
+        "precision@2000": 0.05466666666666666
+      },
+      "validation_pr_auc_minus_adjacency": -0.003046586142321145,
+      "test": {
+        "pr_auc": 0.17410906253750436,
+        "precision@100": 0.39249999999999996,
+        "precision@500": 0.327,
+        "precision@2000": 0.22512500000000002
+      },
+      "test_low_effort_precision@100": 0.045,
+      "test_pr_auc_minus_adjacency_ci95": [
+        0.07054070733012952,
+        0.11267502793216688
+      ],
+      "test_spearman_effort": 0.11333750778557965,
+      "holdout_spearman_effort": 0.24578366527112794
+    },
+    "A": {
+      "model": "ablation: no bias correction",
+      "title": "Spread model without bias correction",
+      "what": "LightGBM on all inputs (spread features, recording effort, climate, land use, population, roads). Uniform negatives, no weights, no neutralisation.",
+      "validation": {
+        "pr_auc": 0.14993661862740032,
+        "precision@100": 0.3466666666666667,
+        "precision@500": 0.23666666666666666,
+        "precision@2000": 0.12666666666666668
+      },
+      "validation_pr_auc_minus_adjacency": 0.10623651945395717,
+      "test": {
+        "pr_auc": 0.20522257753498874,
+        "precision@100": 0.5525,
+        "precision@500": 0.367,
+        "precision@2000": 0.249375
+      },
+      "test_low_effort_precision@100": 0.055,
+      "test_pr_auc_minus_adjacency_ci95": [
+        0.09095927315635022,
+        0.14828382278176833
+      ],
+      "test_spearman_effort": 0.2576884490896117,
+      "holdout_spearman_effort": 0.42405223035111894
+    },
+    "B": {
+      "model": "spread GBM (default)",
+      "title": "Approved bias-corrected default",
+      "what": "LightGBM on all inputs. Target-group negatives, inverse-effort weights, population and road covariates neutralised, recording effort as an explicit feature.",
+      "validation": {
+        "pr_auc": 0.030555804928041812,
+        "precision@100": 0.016666666666666666,
+        "precision@500": 0.024000000000000004,
+        "precision@2000": 0.028999999999999998
+      },
+      "validation_pr_auc_minus_adjacency": -0.013144294245401342,
+      "test": {
+        "pr_auc": 0.04588178050631508,
+        "precision@100": 0.05500000000000001,
+        "precision@500": 0.0385,
+        "precision@2000": 0.035125
+      },
+      "test_low_effort_precision@100": 0.027499999999999997,
+      "test_pr_auc_minus_adjacency_ci95": [
+        -0.04736939684549126,
+        -0.026245517553193955
+      ],
+      "test_spearman_effort": -0.025294786902242322,
+      "holdout_spearman_effort": 0.13329050097946393
+    },
+    "ADJ": {
+      "model": "adjacency (ranked)",
+      "title": "Adjacency baseline (not a model)",
+      "what": "Cells ranked by the number of occupied neighbouring 5 km cells (1-cell ring, then the 2-cell ring as tie-break). Gives a ranking, not a probability.",
+      "validation": {
+        "pr_auc": 0.043700099173443155,
+        "precision@100": 0.07,
+        "precision@500": 0.06133333333333333,
+        "precision@2000": 0.057333333333333326
+      },
+      "validation_pr_auc_minus_adjacency": 0.0,
+      "test": {
+        "pr_auc": 0.08287663689358643,
+        "precision@100": 0.1675,
+        "precision@500": 0.128,
+        "precision@2000": 0.10874999999999999
+      },
+      "test_low_effort_precision@100": 0.0225,
+      "test_pr_auc_minus_adjacency_ci95": null,
+      "test_spearman_effort": 0.040536353004372395,
+      "holdout_spearman_effort": 0.1339926850388159
+    }
+  },
+  "ks": [
+    100,
+    500,
+    2000
+  ],
+  "holdout_frozen": "2501c44 2026-10-24T15:26:57+00:00",
+  "preregistration_commit": "41f8c3a 2026-10-24T15:23:30+00:00"
+}

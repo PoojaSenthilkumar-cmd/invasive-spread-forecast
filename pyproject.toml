@@ -26,6 +26,7 @@ dependencies = [
     "lightgbm>=4.7.0",
     "xgboost>=3.2.0",
     "optuna>=5.0.0",
+    "streamlit>=1.38,<2",
 ]
 
 [dependency-groups]

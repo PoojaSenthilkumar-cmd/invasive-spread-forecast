@@ -5,7 +5,7 @@ CONFIG ?= configs/default.yaml
 SPLIT_YEAR ?= 2019
 export ISF_CONFIG := $(CONFIG)
 
-.PHONY: all setup data ingest covariates clean grid panel bias figures features train evaluate holdout dashboard test lint
+.PHONY: all setup data ingest covariates clean grid panel bias figures features train evaluate holdout dashboard-data dashboard test lint
 
 all: data features train evaluate
 
@@ -54,8 +54,12 @@ evaluate:
 holdout:
 	$(PY) -m src.evaluation.holdout
 
+# Frozen forecast layers + labels for the dashboard (reproduces the frozen holdout fits).
+dashboard-data:
+	$(PY) -m src.app.export_layers
+
 dashboard:
-	@echo "'$@' belongs to Phase 6, which is not implemented yet." && exit 1
+	uv run streamlit run src/app/dashboard.py
 
 test:
 	uv run pytest -q
