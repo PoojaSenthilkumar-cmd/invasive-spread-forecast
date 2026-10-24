@@ -17,7 +17,7 @@ import pandas as pd
 
 from src.config import load_config
 from src.preprocess.bias import effort_path
-from src.preprocess.dataset_builder import panel_path
+from src.preprocess.dataset_builder import end_window, panel_path
 from src.preprocess.grid import load_or_build_grid
 
 log = logging.getLogger(__name__)
@@ -34,9 +34,11 @@ def first_detection_map(
     region: gpd.GeoDataFrame,
     start_year: int,
     out: Path,
+    end_w: int,
 ) -> Path:
-    """Map of the year each cell was first detected (the invasion front over time)."""
+    """Map of the year each cell was first detected (study period only; holdout hidden)."""
     first = panel.groupby("cell_id")["first_detection_window"].first()
+    first = first[first <= end_w]
     g = grid.assign(first=grid["cell_id"].map(first).astype(float) + start_year)
     fig, ax = plt.subplots(figsize=(8, 8))
     _base(ax, region)
@@ -118,11 +120,13 @@ def run(cfg: dict[str, Any]) -> list[Path]:
             region,
             cfg["time"]["start_year"],
             figs / "first_detection_map.png",
+            end_window(cfg),
         )
     ]
     if effort_path(cfg).exists():
+        eff = pd.read_parquet(effort_path(cfg))
         outs.append(
-            effort_map(grid, pd.read_parquet(effort_path(cfg)), region, figs / "effort_map.png")
+            effort_map(grid, eff[eff["window"] <= end_window(cfg)], region, figs / "effort_map.png")
         )
     pred_path = Path(cfg["paths"]["processed"]) / "bias_diagnostic_predictions.parquet"
     if pred_path.exists():

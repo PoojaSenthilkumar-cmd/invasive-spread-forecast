@@ -48,11 +48,24 @@ def window_labels(n: int, start_year: int, window: str) -> list[str]:
     return [f"{start_year + i // 2}H{i % 2 + 1}" for i in range(n)]
 
 
+def last_data_year(cfg: dict[str, Any]) -> int:
+    """Last year kept in the data: ``holdout_year`` if configured, else ``end_year``."""
+    t = cfg["time"]
+    return int(t.get("holdout_year") or t["end_year"])
+
+
 def n_windows(cfg: dict[str, Any]) -> int:
-    """Number of windows in the configured study period."""
+    """Number of windows in the data period (study period plus any holdout year)."""
+    t = cfg["time"]
+    years = last_data_year(cfg) - t["start_year"] + 1
+    return years if t["window"] == "year" else 2 * years
+
+
+def end_window(cfg: dict[str, Any]) -> int:
+    """Index of the last window of the study period (``end_year``); later windows are holdout."""
     t = cfg["time"]
     years = t["end_year"] - t["start_year"] + 1
-    return years if t["window"] == "year" else 2 * years
+    return (years if t["window"] == "year" else 2 * years) - 1
 
 
 def build_panel(
@@ -113,7 +126,8 @@ def run(cfg: dict[str, Any]) -> pd.DataFrame:
     panel.to_parquet(panel_path(cfg), index=False)
 
     summary = (
-        panel.groupby("window_label", observed=True)
+        panel[panel["window"] <= end_window(cfg)]
+        .groupby("window_label", observed=True)
         .agg(
             records=("n_records", "sum"),
             occupied_cells=("present", "sum"),

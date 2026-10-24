@@ -35,7 +35,7 @@ from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from src.config import load_config
 from src.features.covariates_join import LANDCOVER_CLASSES
 from src.features.covariates_join import run as cell_covariates
-from src.preprocess.dataset_builder import panel_path
+from src.preprocess.dataset_builder import end_window, last_data_year, panel_path
 from src.preprocess.grid import cell_ids, load_or_build_grid
 
 log = logging.getLogger(__name__)
@@ -136,7 +136,7 @@ def build_effort(cfg: dict[str, Any]) -> pd.DataFrame:
     cube = read_effort_cube(Path(cfg["paths"]["raw"]) / "gbif" / "effort.zip")
     t = cfg["time"]
     eff = aggregate_effort(
-        cube, int(cfg["grid"]["cell_size_m"]), t["start_year"], t["end_year"], t["window"]
+        cube, int(cfg["grid"]["cell_size_m"]), t["start_year"], last_data_year(cfg), t["window"]
     )
     grid = load_or_build_grid(cfg)
     eff = eff[eff["cell_id"].isin(grid["cell_id"])]
@@ -193,7 +193,9 @@ def bias_diagnostic(cfg: dict[str, Any], split_year: int) -> dict[str, Any]:
     )
 
     eff_train = eff[eff["window"] <= split_w].groupby("cell_id")["effort_insecta"].sum()
-    eff_test = eff[eff["window"] > split_w].groupby("cell_id")["effort_insecta"].sum()
+    end_w = end_window(cfg)
+    eff_test = eff[(eff["window"] > split_w) & (eff["window"] <= end_w)]
+    eff_test = eff_test.groupby("cell_id")["effort_insecta"].sum()
     cov["effort_train"] = cov["cell_id"].map(eff_train).fillna(0).to_numpy()
     cov["effort_test"] = cov["cell_id"].map(eff_test).fillna(0).to_numpy()
     cov["log_pop_density"] = np.log1p(cov["pop_density"])
@@ -201,6 +203,7 @@ def bias_diagnostic(cfg: dict[str, Any], split_year: int) -> dict[str, Any]:
 
     first = panel.groupby("cell_id")["first_detection_window"].first().reindex(cov["cell_id"])
     first = first.to_numpy(dtype=float)
+    first[first > end_w] = np.nan  # holdout-year detections stay unseen
     train_pos = np.flatnonzero(first <= split_w)
     test_mask = ~(first <= split_w)
     y_test = (first > split_w)[test_mask].astype(int)

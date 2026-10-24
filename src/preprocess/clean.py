@@ -150,10 +150,11 @@ def clean(
         df, df["speciesKey"] != cfg["species"]["gbif_taxon_key"], "not matched to focal species key"
     )
     df = lg.apply(df, df["year"].isna(), "missing/unparseable eventDate")
+    last = int(t.get("holdout_year") or t["end_year"])
     df = lg.apply(
         df,
-        (df["year"] < t["start_year"]) | (df["year"] > t["end_year"]),
-        f"outside study period {t['start_year']}-{t['end_year']}",
+        (df["year"] < t["start_year"]) | (df["year"] > last),
+        f"outside data period {t['start_year']}-{last}",
     )
     unc = df["coordinateUncertaintyInMeters"]
     df = lg.apply(

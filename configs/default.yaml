@@ -18,7 +18,10 @@ grid:
 time:
   window: year            # "year" or "half" (6-month windows)
   start_year: 2004        # first documented European record (SW France, 2004)
-  end_year: 2025          # last complete year at time of download
+  end_year: 2025          # last complete year: training/validation/test windows end here
+  # Partial year kept as a final out-of-sample holdout. It is ingested, cleaned and paneled like
+  # the rest, but excluded from every report/model step except `make holdout` (run once).
+  holdout_year: 2026
 
 gbif:
   api_url: https://api.gbif.org/v1
@@ -63,3 +66,31 @@ paths:
   processed: data/processed
   docs: docs
   reports: reports
+  results: results
+
+features:
+  rings: [1, 2, 3, 5, 10]   # neighbourhood radii in cells (Chebyshev); 10 cells = 50 km
+  horizons: [1, 2, 3]       # label: first sighting within t+1..t+k windows
+
+model:
+  seed: 42
+  # Label-window years (the year a first sighting is predicted for). Strictly chronological:
+  # train labels end <= 2018; validation (tuning + calibration, expanding window) 2019-2021;
+  # test 2022-2025; the 2026 holdout is touched only by `make holdout`.
+  first_target_year: 2005
+  val_target_years: [2019, 2020, 2021]
+  test_target_years: [2022, 2023, 2024, 2025]
+  neg_per_pos: 20            # negatives sampled per positive in each window
+  min_neg_per_window: 2000
+  effort_floor_quantile: 0.05
+  max_weight: 10.0           # cap on mean-normalised inverse-effort weights
+  sdm_background_n: 20000
+  n_trials: 25               # Optuna trials (expanding-window CV over val_target_years)
+
+evaluation:
+  k: [100, 500, 1000, 2000]  # precision@k / recall@k, per forecast year, all at-risk cells
+  low_effort_deciles: [1, 2, 3]  # deciles of Insecta effort in the label window (1 = lowest)
+  k_low_effort: [50, 100, 200]
+  lead_time_k: 2000          # a cell is "flagged" when it is in the top-k of a forecast year
+  n_bootstrap: 200
+  block_cells: 10            # 10 x 10 cells = 50 km spatial bootstrap blocks
