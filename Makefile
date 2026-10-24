@@ -5,7 +5,7 @@ CONFIG ?= configs/default.yaml
 SPLIT_YEAR ?= 2019
 export ISF_CONFIG := $(CONFIG)
 
-.PHONY: all setup data ingest covariates clean grid panel bias figures features train evaluate dashboard test lint
+.PHONY: all setup data ingest covariates clean grid panel bias figures features train evaluate holdout dashboard test lint
 
 all: data features train evaluate
 
@@ -41,8 +41,21 @@ figures: bias
 data: figures
 
 ## Phases 3-6 (not implemented yet)
-features train evaluate dashboard:
-	@echo "'$@' belongs to Phases 3-6, which are not implemented yet." && exit 1
+features:
+	$(PY) -m src.features.build_features
+
+train: features
+	$(PY) -m src.models.train
+
+evaluate:
+	$(PY) -m src.evaluation.evaluate
+
+# Final 2026 out-of-sample check. Run ONCE after Phase 5 is frozen (refuses to re-run).
+holdout:
+	$(PY) -m src.evaluation.holdout
+
+dashboard:
+	@echo "'$@' belongs to Phase 6, which is not implemented yet." && exit 1
 
 test:
 	uv run pytest -q

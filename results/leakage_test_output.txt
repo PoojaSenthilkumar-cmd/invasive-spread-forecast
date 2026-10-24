@@ -1,0 +1,9 @@
+test_leakage.py::test_features_at_t_ignore_all_future_data[0] PASSED [ 12%]
+test_leakage.py::test_features_at_t_ignore_all_future_data[2] PASSED [ 25%]
+test_leakage.py::test_features_at_t_ignore_all_future_data[4] PASSED [ 37%]
+test_leakage.py::test_features_at_t_ignore_all_future_data[5] PASSED [ 50%]
+test_leakage.py::test_holdout_window_never_reaches_table PASSED    [ 62%]
+test_leakage.py::test_labels_are_first_detection_in_next_windows PASSED [ 75%]
+test_leakage.py::test_no_feature_column_is_a_label_or_lookahead PASSED [ 87%]
+test_leakage.py::test_box_sum_matches_brute_force PASSED           [100%]
+============================== 8 passed in 1.41s ===============================

@@ -10,3 +10,6 @@ data/processed/*
 !data/*/.gitkeep
 mlruns/
 *.part
+
+# Phase 4-5 bulky model outputs (regenerate with make train)
+results/*.parquet

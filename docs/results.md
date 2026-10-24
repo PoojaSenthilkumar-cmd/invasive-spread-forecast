@@ -89,3 +89,64 @@ recorder effort. Source: `reports/bias_diagnostic.csv`; maps in `reports/figures
   1970-2000 normals, i.e. static covariates.
 * The effort proxy (all GBIF insects) is dominated by the same Belgian and Dutch platforms;
   it measures recording activity, not detection probability for hornets specifically.
+
+## Phases 3-5: next-window spread forecast (test 2022-2025)
+
+**Task:** for each 5 km cell not yet confirmed by the end of year *t*, predict a first *V. velutina*
+sighting in *t+1* (h=1), or within *t+1..t+2* / *t+1..t+3* (h=2, h=3). Features use windows <= *t*
+only (see the leakage test below). The split is strictly chronological by label year: training labels
+end by 2018, validation 2019-2021 (expanding-window Optuna tuning with 25 trials, plus isotonic
+calibration on out-of-fold scores), test 2022-2025. The 2026 holdout has **not** been evaluated.
+
+Test set (h=1): 276,524 cell-years, 7,633 first sightings (base rate 2.6%). Effort deciles come from
+Insecta records in the label year; **low-effort = deciles 1-3** (82,959 cell-years, 169 first
+sightings, base rate 0.20%). Precision@k is per forecast year, then averaged over the 4 years.
+The 95% CIs come from a 50 km spatial block bootstrap (200 resamples).
+
+| model (h=1) | PR-AUC [95% CI] | ROC-AUC | P@100 | P@500 | P@2000 | low-effort PR-AUC | low-effort P@100 | rho(pred, effort) |
+|---|---|---|---|---|---|---|---|---|
+| **spread GBM, approved default** (TG negatives + inverse-effort weights + neutralised pop/road + effort features) | 0.046 [0.039, 0.054] | 0.747 | 0.055 | 0.039 | 0.035 | 0.010 | 0.028 | -0.03 |
+| ablation: first-run TG (negatives only from recorded cells) | 0.044 [0.038, 0.051] | 0.735 | 0.018 | 0.021 | 0.031 | 0.007 | 0.005 | -0.04 |
+| ablation: effort features also neutralised | 0.075 [0.060, 0.088] | 0.799 | 0.218 | 0.146 | 0.100 | 0.012 | 0.033 | -0.04 |
+| ablation: no bias correction | **0.205 [0.165, 0.240]** | 0.888 | 0.553 | 0.367 | 0.249 | 0.026 | 0.055 | 0.26 |
+| ablation: dynamic features only (TG + weights, no effort/env) | 0.174 [0.141, 0.205] | 0.856 | 0.393 | 0.327 | 0.225 | 0.021 | 0.045 | 0.11 |
+| ablation: no dynamic features (static GBM) | 0.036 [0.032, 0.041] | 0.680 | 0.023 | 0.016 | 0.020 | 0.008 | 0.015 | 0.04 |
+| static SDM, logistic (poly-2) | 0.038 [0.034, 0.043] | 0.665 | 0.070 | 0.061 | 0.046 | 0.007 | 0.013 | 0.00 |
+| static SDM, random forest | 0.034 [0.030, 0.038] | 0.604 | 0.063 | 0.054 | 0.046 | 0.010 | 0.018 | -0.20 |
+| adjacency, binary (next to an occupied cell) | 0.061 [0.052, 0.071] | 0.734 | 0.083 | 0.088 | 0.078 | 0.006 | 0.010 | 0.03 |
+| **adjacency, ranked** (number of occupied neighbours) | 0.083 [0.067, 0.098] | 0.794 | 0.168 | 0.128 | 0.109 | 0.009 | 0.023 | 0.04 |
+| distance to front | 0.078 [0.066, 0.090] | 0.831 | 0.093 | 0.091 | 0.087 | 0.008 | 0.010 | 0.12 |
+| random | 0.026 | 0.505 | 0.020 | 0.026 | 0.027 | 0.002 | 0.005 | 0.00 |
+
+**Does the model beat adjacency?** PR-AUC difference vs ranked adjacency (paired block bootstrap):
+
+- Approved default: **no**, -0.037 [-0.047, -0.026].
+- No bias correction: yes, +0.122 [0.091, 0.148]. In low-effort cells, P@100 is 0.055 vs 0.023 (difference CI [+0.008, +0.058]).
+- Dynamic only: yes, +0.091 [0.071, 0.113].
+- Effort also neutralised: no clear difference, -0.008 [-0.017, +0.002].
+
+On validation (out-of-fold 2019-2021, base rate 0.8%) only the no-bias-correction model beats
+ranked adjacency (PR-AUC 0.150 vs 0.044; approved default 0.031; dynamic only 0.041).
+
+**Why the approved default fails.** Within the test set, its mean raw score *falls* with effort
+(0.076 in decile 1 vs 0.014 in decile 10), while the observed rate *rises* 250x (0.04% vs 10.1%).
+Target-group sampling and inverse-effort weights already remove the effort-detection link from the
+training labels, and with effort also given as an explicit feature the model learns that link
+backwards ("well-recorded means no hornet"). Sampling floors and weight caps did not change this
+(0.044 -> 0.046).
+
+**Longer horizons (default model vs baselines, PR-AUC):** h=2: 0.087 vs adjacency 0.106 and
+distance 0.126. h=3: 0.123 vs adjacency 0.114 (diff CI [-0.001, +0.019]) and distance 0.153.
+
+**Lead time** (a cell counts as flagged when it is in a year's top 2,000):
+- No bias correction: flags 30.6% of newly sighted test cells before their first record (median lead 1 year).
+- Ranked adjacency: 12.6% (median lead 1 year).
+- Approved default: 6.0% (median lead 2 years).
+
+**Calibration caveat:** all isotonic calibrators were fit on the validation years (base rate 0.8%),
+so on the test years (base rate 2.6%) every model under-predicts. ECE is 0.014-0.017 across models,
+which is about two-thirds of the base rate.
+
+Full numbers: `results/metrics.json`, `results/summary_h1.csv`, `results/metrics_by_effort_decile.csv`;
+figures: `reports/figures/reliability_h1.png`, `reports/figures/effort_decile_metrics.png`.
+The leakage test output is in `results/leakage_test_output.txt`.
