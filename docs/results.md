@@ -1,7 +1,9 @@
-# Results: Phases 1 and 2
+# Results: next-sighting forecast for *Vespa velutina* (Asian hornet) in Western Europe
 
 All numbers below come from the real downloads of 24 Oct 2026 (DOIs in `docs/gbif_downloads.md`)
-and are reproducible with `make data`. No model forecasts yet; those are Phases 3-4.
+and are reproducible with `make data`. Phases 1-2 (data, panel, bias diagnostic) come first,
+then the Phase 3-5 forecast evaluation, the single 2026 holdout, the frozen models, backtest,
+SHAP drivers and the dashboard; limitations are at the end.
 
 ## Occurrence data
 
@@ -81,7 +83,7 @@ recorder effort. Source: `reports/bias_diagnostic.csv`; maps in `reports/figures
   covariates neutralised, plus effort as an explicit feature of the spread model so that
   "new detection" is modelled as occupancy times detection.
 
-## Known limitations at this stage
+## Known limitations of the Phase 1-2 data
 
 * The 2026 records (70,964) are excluded because the year is incomplete. They can serve as a
   true out-of-sample check in Phase 4.
@@ -186,3 +188,76 @@ Reading the holdout:
 Outputs: `results/holdout_metrics.json`, `results/holdout_by_effort_decile.csv`, and
 `results/forecast_from_2025.parquet` (per-cell P(first sighting within 1/2/3 years after 2025) from
 the default model; not committed, regenerate with `make holdout --force`).
+
+## Frozen model files (post-run addendum)
+
+The holdout run fitted its models in memory. `make freeze` (`src/models/freeze.py`) re-created them
+afterwards from the same data, hyperparameters and seeds, and saved them to `models/frozen/`:
+LightGBM boosters, training medians, SDMs and isotonic calibrators. The SHA-256 of every file and of
+`results/tuning.json` is in `models/frozen/MANIFEST.json`. The same hashes were appended to
+`results/holdout_preregistration.json` as a `post_run_addendum`, in a separate commit **after** the
+holdout run; they were not part of the original pre-registration.
+
+Five boosters reproduce per-cell outputs saved by the holdout run (max abs. difference <= 1.5e-12):
+layers A, B and C at h=1, and the default model at h=2 and h=3. The other ablations and the SDMs have
+no saved per-cell output to compare with unless 2026 is re-scored, so they are marked unverified.
+Multithreaded LightGBM fits are not always bit-reproducible (two back-to-back h=3 refits in one
+diagnostic process differed), so the flags record the check that was actually made.
+
+## Backtest replay 2022-2025 (dashboard "Backtest" tab)
+
+These are the saved Phase 5 test predictions, not re-scored. The models were fit once on labels up
+to 2021, and features were updated each year. Hits are cells in a layer's top 2,000 that were first
+sighted in the forecast year:
+
+| forecast for | new cells | C top-2000 hits | A | B | adjacency (ranked) |
+|---|---|---|---|---|---|
+| 2022 | 1,114 | 309 | 419 | 136 | 205 |
+| 2023 | 1,809 | 335 | 446 | 76 | 168 |
+| 2024 | 1,992 | 424 | 538 | 34 | 180 |
+| 2025 | 2,047 | 733 | 592 | 35 | 317 |
+
+## SHAP drivers (layers C and A)
+
+Exact TreeSHAP contributions (LightGBM `pred_contrib`, log-odds) for the top 200 cells of each layer
+in the forecast issued at the end of 2025 (`results/dashboard_shap.parquet`).
+
+- **C:** the drivers are all spread features: distance to the nearest occupied cell (mean |SHAP|
+  2.20), new occupied cells within 10 cells this year (1.09), active cells within 10 (0.72),
+  occupied cells within 5 (0.71) and within 10 (0.62).
+- **A:** also led by distance (1.86), active cells within 10 (1.35) and occupied cells within 10
+  (0.98). Population density appears among its top five drivers (0.58), consistent with A tracking
+  where people are and record.
+
+## Dashboard probabilities
+
+The isotonic calibrators were fit on 2019-2021, when 0.80% of at-risk cells were newly sighted each
+year. On the 2022-2025 test, layers A, B and C predicted on average 0.9-1.0% against an observed
+2.5%. The dashboard therefore shows rank bands and relative risk (a cell's predicted risk divided by
+the average at-risk cell), states this under-prediction in the UI, and does not show absolute
+probabilities. No recalibration on test-era base rates was done.
+
+## Retraining
+
+`make retrain` (`src/pipeline/retrain.py`, also `.github/workflows/retrain.yml`) runs the whole
+pipeline: GBIF download, cleaning, grid, panels, bias layers, features, tuning/training,
+evaluation, and dashboard layers plus backtest. Everything is written under `runs/<timestamp>/`.
+It never writes to `results/` or `models/frozen/` and never runs the holdout. The study period
+stays as configured. View a run with `ISF_RESULTS=runs/<id>/results make dashboard`.
+
+## Limitations
+
+- **Partial 2026.** The holdout year is a GBIF snapshot from October 2026, so it has fewer first
+  sightings than a full year (508; base rate 0.79% vs 1.6-3.1% in 2022-2025). Its numbers are
+  comparable across models, but not to full years.
+- **Static covariates.** Climate, land cover, elevation, population and roads are single static
+  layers (`docs/data_sources.md`). Year-to-year weather, land-use change and control measures
+  (nest destruction) are not modelled.
+- **Platform-dominated data.** Recording intensity is not stationary: in 2025, 110k of the 181k
+  records came from one Belgian platform (Waarnemingen.be). The labels are first *recorded*
+  sightings, so every model partly forecasts where recording happens. A's correlation with effort
+  (0.26 on test, 0.42 on 2026) shows this most.
+- **Low-effort holdout is uninformative.** Only 9 of the 508 first sightings in 2026 fell in the
+  low-effort cells (deciles 1-3). No low-effort holdout comparison can separate the models.
+- **Default chosen after seeing test results.** Layer C did not beat adjacency on validation
+  (PR-AUC 0.041 vs 0.044), so its selection as the dashboard default is informed by test results.

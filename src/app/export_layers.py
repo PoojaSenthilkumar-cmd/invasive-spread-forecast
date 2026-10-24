@@ -65,10 +65,12 @@ def _rank(score: np.ndarray, seed: int = 0) -> np.ndarray:
     return rank
 
 
-def _git_commit(path: str) -> str | None:
+def _git_commit(path: str, first: bool = False) -> str | None:
+    """Short hash + date of the last (or, with ``first``, the adding) commit touching ``path``."""
+    args = ["--diff-filter=A"] if first else ["-1"]
     try:
         out = subprocess.run(
-            ["git", "log", "-1", "--format=%h %cI", "--", path],
+            ["git", "log", *args, "--format=%h %cI", "--", path],
             capture_output=True,
             text=True,
             check=True,
@@ -82,7 +84,8 @@ def labels(cfg: dict[str, Any], table: pd.DataFrame, oof: pd.DataFrame) -> dict[
     """Validation (OOF 2019-2021), test (2022-2025) and 2026 holdout numbers per layer."""
     out = results_dir(cfg)
     test = json.loads((out / "metrics.json").read_text())["models"]
-    hold = json.loads((out / "holdout_metrics.json").read_text())
+    hp = out / "holdout_metrics.json"
+    hold = json.loads(hp.read_text()) if hp.exists() else None  # absent in retrain runs
     o = oof[oof["horizon"] == 1].copy()
     o["year"] = table.loc[o["idx"], "year"].to_numpy()
     assert (table.loc[o["idx"], "y_h1"].to_numpy() == o["y"].to_numpy()).all()
@@ -92,7 +95,8 @@ def labels(cfg: dict[str, Any], table: pd.DataFrame, oof: pd.DataFrame) -> dict[
         val[name].update(per_year_at_k(g, "y", KS))
     res: dict[str, Any] = {"layers": {}, "ks": KS}
     for key, (name, title, what) in LAYERS.items():
-        t, h = test[name]["h1"], hold["models"][name]["h1"]
+        t = test[name]["h1"]
+        h = hold["models"][name]["h1"] if hold else {"spearman_with": {"meta_effort_target": None}}
         res["layers"][key] = {
             "model": name,
             "title": title,
@@ -105,8 +109,9 @@ def labels(cfg: dict[str, Any], table: pd.DataFrame, oof: pd.DataFrame) -> dict[
             "test_spearman_effort": t["spearman_with"]["meta_effort_target"],
             "holdout_spearman_effort": h["spearman_with"]["meta_effort_target"],
         }
+    res["has_holdout"] = hold is not None
     res["holdout_frozen"] = _git_commit("results/holdout_metrics.json")
-    res["preregistration_commit"] = _git_commit("results/holdout_preregistration.json")
+    res["preregistration_commit"] = _git_commit("results/holdout_preregistration.json", first=True)
     return res
 
 
@@ -133,13 +138,28 @@ def run(cfg: dict[str, Any]) -> pd.DataFrame:
         lay[f"rank_{key}"] = _rank(np.asarray(s, dtype=float))
         log.info("layer %s (%s) exported", key, name)
 
-    saved = pd.read_parquet(out / "forecast_from_2025.parquet")
+    fc = out / "forecast_from_2025.parquet"
+    if not fc.exists():  # retrain run: no frozen holdout forecast to check against
+        log.info("no %s: skipping the frozen-model check", fc)
+        return _finish(cfg, out, lay, table, oof, end_w)
+    saved = pd.read_parquet(fc)
     assert (saved["cell_id"].to_numpy() == lay["cell_id"].to_numpy()).all()
     diff = float(np.abs(saved["p_within_1y"].to_numpy() - lay["prob_B"].to_numpy()).max())
     if diff > 1e-9:
         raise SystemExit(f"refit differs from the frozen holdout forecast (max diff {diff})")
     log.info("frozen-model check passed: default layer equals saved forecast (max diff %g)", diff)
+    return _finish(cfg, out, lay, table, oof, end_w)
 
+
+def _finish(
+    cfg: dict[str, Any],
+    out: Any,
+    lay: pd.DataFrame,
+    table: pd.DataFrame,
+    oof: pd.DataFrame,
+    end_w: int,
+) -> pd.DataFrame:
+    """Add occupied cells and coordinates; write the layers and labels files."""
     panel = pd.read_parquet(panel_path(cfg), columns=["cell_id", "first_detection_window"])
     first = panel.drop_duplicates("cell_id").set_index("cell_id")["first_detection_window"]
     first = first.astype(float)

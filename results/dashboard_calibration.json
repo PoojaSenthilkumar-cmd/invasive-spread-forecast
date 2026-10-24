@@ -1,0 +1,75 @@
+{
+  "C": {
+    "model": "ablation: dynamic features only",
+    "title": "Bias-corrected spread model, spread inputs only (dashboard default)",
+    "mean_predicted": 0.011172800005848279,
+    "observed_rate": 0.025176838040351868,
+    "per_target_year": {
+      "2022": {
+        "mean_predicted": 0.00779,
+        "observed": 0.01561
+      },
+      "2023": {
+        "mean_predicted": 0.00893,
+        "observed": 0.02575
+      },
+      "2024": {
+        "mean_predicted": 0.01225,
+        "observed": 0.0291
+      },
+      "2025": {
+        "mean_predicted": 0.01608,
+        "observed": 0.0308
+      }
+    }
+  },
+  "A": {
+    "model": "ablation: no bias correction",
+    "title": "Spread model without bias correction",
+    "mean_predicted": 0.008891950359784757,
+    "observed_rate": 0.025176838040351868,
+    "per_target_year": {
+      "2022": {
+        "mean_predicted": 0.00852,
+        "observed": 0.01561
+      },
+      "2023": {
+        "mean_predicted": 0.00804,
+        "observed": 0.02575
+      },
+      "2024": {
+        "mean_predicted": 0.00948,
+        "observed": 0.0291
+      },
+      "2025": {
+        "mean_predicted": 0.00959,
+        "observed": 0.0308
+      }
+    }
+  },
+  "B": {
+    "model": "spread GBM (default)",
+    "title": "Approved bias-corrected default",
+    "mean_predicted": 0.009741683267628039,
+    "observed_rate": 0.025176838040351868,
+    "per_target_year": {
+      "2022": {
+        "mean_predicted": 0.00829,
+        "observed": 0.01561
+      },
+      "2023": {
+        "mean_predicted": 0.00898,
+        "observed": 0.02575
+      },
+      "2024": {
+        "mean_predicted": 0.01041,
+        "observed": 0.0291
+      },
+      "2025": {
+        "mean_predicted": 0.01142,
+        "observed": 0.0308
+      }
+    }
+  },
+  "_validation_observed_rate": 0.007982353679835796
+}

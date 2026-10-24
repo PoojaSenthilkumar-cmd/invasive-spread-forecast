@@ -5,7 +5,7 @@ CONFIG ?= configs/default.yaml
 SPLIT_YEAR ?= 2019
 export ISF_CONFIG := $(CONFIG)
 
-.PHONY: all setup data ingest covariates clean grid panel bias figures features train evaluate holdout dashboard-data dashboard test lint
+.PHONY: all setup data ingest covariates clean grid panel bias figures features train evaluate holdout dashboard-data freeze retrain dashboard test lint
 
 all: data features train evaluate
 
@@ -57,6 +57,16 @@ holdout:
 # Frozen forecast layers + labels for the dashboard (reproduces the frozen holdout fits).
 dashboard-data:
 	$(PY) -m src.app.export_layers
+	$(PY) -m src.app.export_backtest
+
+# Save + hash the frozen holdout models (models/frozen/MANIFEST.json) and export SHAP drivers.
+freeze:
+	$(PY) -m src.models.freeze
+
+# Pull new GBIF records, rebuild, refit and export into runs/<timestamp>/ (never over results/).
+# e.g. make retrain ARGS="--skip-download --trials 2"
+retrain:
+	$(PY) -m src.pipeline.retrain $(ARGS)
 
 dashboard:
 	uv run streamlit run src/app/dashboard.py

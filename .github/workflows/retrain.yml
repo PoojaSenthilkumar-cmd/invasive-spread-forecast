@@ -1,0 +1,66 @@
+name: retrain
+
+# Pull new GBIF records, rebuild features, refit and regenerate the dashboard layers.
+# Outputs go to runs/ci and are uploaded as an artifact; the frozen results/ and
+# models/frozen/ in the repository are never modified and the 2026 holdout is never re-scored.
+on:
+  workflow_dispatch:
+    inputs:
+      trials:
+        description: "Optuna trials (empty = config default)"
+        required: false
+        default: ""
+  schedule:
+    - cron: "0 3 1 * *"   # monthly, 03:00 UTC on the 1st
+
+permissions:
+  contents: read
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      GBIF_USER: ${{ secrets.GBIF_USER }}
+      GBIF_PWD: ${{ secrets.GBIF_PWD }}
+      GBIF_EMAIL: ${{ secrets.GBIF_EMAIL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Restore static covariates
+        id: cov
+        uses: actions/cache@v4
+        with:
+          path: data/raw/covariates
+          key: covariates-${{ hashFiles('configs/default.yaml', 'src/ingest/covariates.py') }}
+
+      - name: Download static covariates (cache miss only)
+        if: steps.cov.outputs.cache-hit != 'true'
+        run: uv run python -m src.ingest.covariates
+
+      - name: Tests
+        run: uv run pytest -q
+
+      - name: Retrain (GBIF download -> features -> refit -> dashboard layers)
+        run: |
+          ARGS="--run-dir runs/ci"
+          if [ -n "${{ github.event.inputs.trials }}" ]; then ARGS="$ARGS --trials ${{ github.event.inputs.trials }}"; fi
+          uv run python -m src.pipeline.retrain $ARGS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: retrain-${{ github.run_id }}
+          path: |
+            runs/ci/results/*.json
+            runs/ci/results/*.csv
+            runs/ci/results/dashboard_*.parquet
+            runs/ci/docs/
+            runs/ci/reports/
+          retention-days: 30
