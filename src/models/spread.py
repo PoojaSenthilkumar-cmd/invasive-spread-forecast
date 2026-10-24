@@ -148,6 +148,7 @@ def lgbm_fitter(
             return model.predict_proba(_neutralised(r, v, medians))[:, 1]
 
         score.model = model  # type: ignore[attr-defined]
+        score.medians = medians  # type: ignore[attr-defined]
         return score
 
     return fit
@@ -199,7 +200,12 @@ def static_sdm_fitter(
             )
             m.fit(Xt, yt, sample_weight=wt)
         cell_score = pd.Series(m.predict_proba(X)[:, 1], index=cov.index)
-        return lambda r: cell_score.reindex(r["cell_id"]).to_numpy()
+
+        def score(r: pd.DataFrame) -> np.ndarray:
+            return cell_score.reindex(r["cell_id"]).to_numpy()
+
+        score.model = m  # type: ignore[attr-defined]
+        return score
 
     return fit
 

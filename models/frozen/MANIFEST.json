@@ -1,0 +1,165 @@
+{
+  "note": "Re-created after the single 2026 holdout run by refitting with the frozen data, hyperparameters and seeds. Files marked verified reproduce the per-cell outputs saved by that run (layers A, B, C at h1). The other h1 models have no saved per-cell output to compare against without re-scoring 2026, so they are unverified. Multithreaded LightGBM fits are not always bit-reproducible (two back-to-back h3 refits in one diagnostic process differed), so each file's verified flag is set from the comparison actually made when it was written.",
+  "files": {
+    "lgbm_h1__spread_gbm_default.txt": {
+      "model": "spread GBM (default)",
+      "horizon": 1,
+      "kind": "LightGBM booster",
+      "verified_against_saved_holdout_output": true,
+      "sha256": "44a38f1e7bfa1cf16b40f39283c81fa1eb72f4a5df4acd784cf8fc13aee398ef",
+      "bytes": 3838085
+    },
+    "lgbm_h1__spread_gbm_default.medians.json": {
+      "model": "spread GBM (default)",
+      "horizon": 1,
+      "kind": "training medians (neutralisation)",
+      "sha256": "f524f3952a97dc7750d138d43302b26f4cf0bc14056a5c14ec65a00884f23b96",
+      "bytes": 1832
+    },
+    "lgbm_h1__ablation_no_bias_correction.txt": {
+      "model": "ablation: no bias correction",
+      "horizon": 1,
+      "kind": "LightGBM booster",
+      "verified_against_saved_holdout_output": true,
+      "sha256": "48f0765fa9b6a7e182570c1e157c6afa677c44b1a3529c71493e118bba93db1e",
+      "bytes": 3837841
+    },
+    "lgbm_h1__ablation_no_bias_correction.medians.json": {
+      "model": "ablation: no bias correction",
+      "horizon": 1,
+      "kind": "training medians (neutralisation)",
+      "sha256": "e0716a66249103a0e8c8c79bd3f73be5472697496539b8849f5131907744d539",
+      "bytes": 1827
+    },
+    "lgbm_h1__ablation_tg_negatives_from_recorded_cells_only_first_run.txt": {
+      "model": "ablation: TG negatives from recorded cells only (first run)",
+      "horizon": 1,
+      "kind": "LightGBM booster",
+      "verified_against_saved_holdout_output": false,
+      "sha256": "cb52172811148c4f5aa0b9f210bf0be878e9d420b625f255a57435a2c5ddf125",
+      "bytes": 3839024
+    },
+    "lgbm_h1__ablation_tg_negatives_from_recorded_cells_only_first_run.medians.json": {
+      "model": "ablation: TG negatives from recorded cells only (first run)",
+      "horizon": 1,
+      "kind": "training medians (neutralisation)",
+      "sha256": "82dbb78ff01feae77bfdb59f7304763188feacc6b51b8cbcf94b8e0ab3faa0c3",
+      "bytes": 1843
+    },
+    "lgbm_h1__ablation_effort_features_also_neutralised.txt": {
+      "model": "ablation: effort features also neutralised",
+      "horizon": 1,
+      "kind": "LightGBM booster",
+      "verified_against_saved_holdout_output": false,
+      "sha256": "bd2dbc357b19334a03ea04dece215194c746b08b69841c358ab4fa14d6320af9",
+      "bytes": 3838085
+    },
+    "lgbm_h1__ablation_effort_features_also_neutralised.medians.json": {
+      "model": "ablation: effort features also neutralised",
+      "horizon": 1,
+      "kind": "training medians (neutralisation)",
+      "sha256": "f524f3952a97dc7750d138d43302b26f4cf0bc14056a5c14ec65a00884f23b96",
+      "bytes": 1832
+    },
+    "lgbm_h1__ablation_no_dynamic_features_static_gbm.txt": {
+      "model": "ablation: no dynamic features (static GBM)",
+      "horizon": 1,
+      "kind": "LightGBM booster",
+      "verified_against_saved_holdout_output": false,
+      "sha256": "115073ee1954192d3f078bf1362ea253fa6d94a6bfc5b879ebfe4ea5e46f8909",
+      "bytes": 3832061
+    },
+    "lgbm_h1__ablation_no_dynamic_features_static_gbm.medians.json": {
+      "model": "ablation: no dynamic features (static GBM)",
+      "horizon": 1,
+      "kind": "training medians (neutralisation)",
+      "sha256": "4fe45e45ba25ee817f4acc05166ef0fd185bf5ff9c18d07af49366aba4401ee7",
+      "bytes": 1152
+    },
+    "lgbm_h1__ablation_dynamic_features_only.txt": {
+      "model": "ablation: dynamic features only",
+      "horizon": 1,
+      "kind": "LightGBM booster",
+      "verified_against_saved_holdout_output": true,
+      "sha256": "c4978a86b7b3027d1aace28dbe3525b387e7d184a8ba1f70caea905fa80a397a",
+      "bytes": 3821167
+    },
+    "lgbm_h1__ablation_dynamic_features_only.medians.json": {
+      "model": "ablation: dynamic features only",
+      "horizon": 1,
+      "kind": "training medians (neutralisation)",
+      "sha256": "8ddadab383fe49636937342124d5be52971881840173abb3977be7d4a61a5f38",
+      "bytes": 682
+    },
+    "lgbm_h2__spread_gbm_default.txt": {
+      "model": "spread GBM (default)",
+      "horizon": 2,
+      "kind": "LightGBM booster",
+      "verified_against_saved_holdout_output": true,
+      "sha256": "fc4ee07f5a61188ae0d3f14ebd2f699f9f0f5ee10fd2db3197a1d01c6a09fbcd",
+      "bytes": 3855217
+    },
+    "lgbm_h2__spread_gbm_default.medians.json": {
+      "model": "spread GBM (default)",
+      "horizon": 2,
+      "kind": "training medians (neutralisation)",
+      "sha256": "97f4ec09520e56e6ff24e3915cb3f5ad3e3c3db6d11cad4ac702cdf989a78ac6",
+      "bytes": 1838
+    },
+    "lgbm_h3__spread_gbm_default.txt": {
+      "model": "spread GBM (default)",
+      "horizon": 3,
+      "kind": "LightGBM booster",
+      "verified_against_saved_holdout_output": true,
+      "sha256": "f8e28199e12cf0333d13910a2ee769781ede3ae99dffeb681f53a33ea9973b32",
+      "bytes": 3862343
+    },
+    "lgbm_h3__spread_gbm_default.medians.json": {
+      "model": "spread GBM (default)",
+      "horizon": 3,
+      "kind": "training medians (neutralisation)",
+      "sha256": "48530dddef7b202079f1583e023d0901515f767f08681ee778610348e0506770",
+      "bytes": 1857
+    },
+    "sdm__static_sdm_logistic_poly_2.joblib": {
+      "model": "static SDM (logistic, poly-2)",
+      "horizon": 1,
+      "kind": "sklearn lr SDM",
+      "verified_against_saved_holdout_output": false,
+      "sha256": "5741a599201b8a8070991576ac76b2f58bf454c2c848f28028f666fb7e2a695f",
+      "bytes": 13406
+    },
+    "sdm__static_sdm_random_forest.joblib": {
+      "model": "static SDM (random forest)",
+      "horizon": 1,
+      "kind": "sklearn rf SDM",
+      "verified_against_saved_holdout_output": false,
+      "sha256": "72f2609f36758943058bec2a9b2b93eb962ae2af8f4231b15816f3da4f1f633a",
+      "bytes": 11610614
+    },
+    "isotonic_calibrators.joblib": {
+      "model": "all",
+      "kind": "isotonic calibrators (2019-2021 OOF)",
+      "sha256": "757f3d07ce49712de502c10b697df1f1b1ddb01e065b7f59b898080774d215bd",
+      "bytes": 8804
+    }
+  },
+  "tuning.json": {
+    "sha256": "8a1fed2280dcc9d3d97092edfca2aff4e193ed7d484f30eae83d8176911a2726"
+  },
+  "verification_max_abs_diff": {
+    "spread GBM (default) h1: saved file reproduces in-memory model": 0.0,
+    "spread GBM (default) h1 vs dashboard layer B": 4.428055144778398e-13,
+    "ablation: no bias correction h1: saved file reproduces in-memory model": 0.0,
+    "ablation: no bias correction h1 vs dashboard layer A": 1.784249831215945e-13,
+    "ablation: TG negatives from recorded cells only (first run) h1: saved file reproduces in-memory model": 0.0,
+    "ablation: effort features also neutralised h1: saved file reproduces in-memory model": 0.0,
+    "ablation: no dynamic features (static GBM) h1: saved file reproduces in-memory model": 0.0,
+    "ablation: dynamic features only h1: saved file reproduces in-memory model": 0.0,
+    "ablation: dynamic features only h1 vs dashboard layer C": 1.6609977282477928e-15,
+    "spread GBM (default) h2: saved file reproduces in-memory model": 0.0,
+    "spread GBM (default) h2 vs forecast_from_2025 (ok)": 2.641636909217482e-13,
+    "spread GBM (default) h3: saved file reproduces in-memory model": 0.0,
+    "spread GBM (default) h3 vs forecast_from_2025 (ok)": 1.4704947329247098e-12
+  }
+}

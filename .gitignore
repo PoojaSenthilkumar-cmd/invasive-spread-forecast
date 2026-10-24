@@ -14,3 +14,8 @@ mlruns/
 # Phase 4-5 bulky model outputs (regenerate with make train)
 results/*.parquet
 !results/dashboard_layers.parquet
+!results/dashboard_backtest.parquet
+!results/dashboard_shap.parquet
+
+# retrain runs (make retrain) write here, never over results/
+runs/
