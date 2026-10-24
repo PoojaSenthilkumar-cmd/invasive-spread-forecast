@@ -1,0 +1,40 @@
+{
+  "registered_before_holdout_run": true,
+  "forecast": "issued after 2025 (features from windows <= 2025), label = first sighting in 2026 (h=1)",
+  "models": [
+    "spread GBM (default)",
+    "ablation: no bias correction",
+    "ablation: TG negatives from recorded cells only (first run)",
+    "ablation: effort features also neutralised",
+    "ablation: no dynamic features (static GBM)",
+    "ablation: dynamic features only",
+    "static SDM (logistic, poly-2)",
+    "static SDM (random forest)",
+    "adjacency (binary)",
+    "adjacency (ranked)",
+    "distance to front",
+    "random"
+  ],
+  "fitting": "each model refit on all study-period labels (label windows <= 2025) with the frozen Phase 4 hyperparameters (results/tuning.json); isotonic calibrators from the 2019-2021 OOF scores; no tuning or selection on 2026",
+  "primary_metric": "PR-AUC",
+  "secondary_metrics": [
+    "ROC-AUC",
+    "Brier",
+    "log-loss",
+    "ECE",
+    "precision@k and recall@k for k in evaluation.k",
+    "low-effort (deciles 1-3 of 2026 Insecta effort) PR-AUC and precision@k for k in evaluation.k_low_effort",
+    "effort-decile table",
+    "spearman with population, road density, effort"
+  ],
+  "primary_comparisons": [
+    "each model vs adjacency (ranked): PR-AUC difference with 50 km block-bootstrap 95% CI",
+    "each model vs adjacency (ranked): low-effort precision@100 difference CI"
+  ],
+  "status_of_models": {
+    "spread GBM (default)": "user-approved default (lost to adjacency on test 2022-2025)",
+    "ablation: no bias correction": "best on validation 2019-2021 and on test",
+    "others": "ablations/baselines; none selected on test"
+  },
+  "caveat": "2026 is a partial year (GBIF snapshot Oct 2026)"
+}

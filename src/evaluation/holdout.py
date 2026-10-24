@@ -37,13 +37,8 @@ from src.preprocess.bias import build_effort
 from src.preprocess.dataset_builder import end_window, panel_path
 
 log = logging.getLogger(__name__)
-HOLDOUT_MODELS = [
-    DEFAULT,
-    "ablation: no bias correction",
-    "static SDM (logistic, poly-2)",
-    "static SDM (random forest)",
-    *BASELINES,
-]
+SDMS = {"static SDM (logistic, poly-2)": "lr", "static SDM (random forest)": "rf"}
+PREREG = "holdout_preregistration.json"
 
 
 def _calibrator(oof: pd.DataFrame, name: str, k: int) -> IsotonicRegression:
@@ -80,10 +75,12 @@ def run(cfg: dict[str, Any], force: bool = False) -> dict[str, Any]:
     rows = holdout_rows(cfg, table)
     effort = build_effort(cfg)
 
-    fitters = {n: lgbm_fitter(table, 1, vs[n], params, mcfg, seed) for n in HOLDOUT_MODELS[:2]}
-    fitters["static SDM (logistic, poly-2)"] = static_sdm_fitter(cfg, table, "lr", effort)
-    fitters["static SDM (random forest)"] = static_sdm_fitter(cfg, table, "rf", effort)
+    prereg = json.loads((out / PREREG).read_text())
+    fitters = {n: lgbm_fitter(table, 1, v, params, mcfg, seed) for n, v in vs.items()}
+    fitters.update({n: static_sdm_fitter(cfg, table, kind, effort) for n, kind in SDMS.items()})
     fitters.update({n: fixed_scorer(fn) for n, fn in BASELINES.items()})
+    if sorted(fitters) != sorted(prereg["models"]):
+        raise SystemExit("holdout model set differs from the pre-registration")
 
     parts, scorers = [], {}
     for name, fit in fitters.items():
@@ -101,6 +98,7 @@ def run(cfg: dict[str, Any], force: bool = False) -> dict[str, Any]:
         "n_rows": int(len(rows)),
         "n_new_cells": int(rows["y_h1"].sum()),
         "note": "partial year (GBIF snapshot Oct 2026); evaluated once",
+        "preregistration": prereg,
     }
     dest.write_text(json.dumps(metrics, indent=2, default=_json))
     deciles.to_csv(out / "holdout_by_effort_decile.csv", index=False)
