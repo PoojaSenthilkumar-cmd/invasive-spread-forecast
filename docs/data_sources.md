@@ -4,6 +4,11 @@ Everything is downloaded by `make data` (`src/ingest/*.py`) into `data/raw/` (gi
 cached: a file that is already present is not downloaded again. GBIF download keys, DOIs and
 citations are written to [`docs/gbif_downloads.md`](gbif_downloads.md) automatically.
 
+Current downloads (24 Oct 2026):
+
+* Occurrences: GBIF.org (24 October 2026) GBIF Occurrence Download https://doi.org/10.15468/dl.93qv4t (key `0001807-261023074918325`, 464,199 records)
+* Effort cube: GBIF.org (24 October 2026) GBIF Occurrence Download https://doi.org/10.15468/dl.s367gk (key `0001813-261023074918325`, 5,449,469 aggregated rows of cell x year x half-year)
+
 | Layer | Source / version | Resolution | Access | Licence / terms | Used for |
 |---|---|---|---|---|---|
 | Focal-species occurrences | GBIF occurrence download (SIMPLE_CSV), taxon key 1311477, GBIF Backbone | points | GBIF async download API (needs a GBIF account: `GBIF_USER`, `GBIF_PWD`, `GBIF_EMAIL`) | per-dataset CC0 / CC BY / CC BY-NC; cite the download DOI | presences, panel |

@@ -1,0 +1,72 @@
+{
+  "split_year": 2019,
+  "n_train_presence_cells": 7527,
+  "n_test_new_cells": 8164,
+  "n_test_cells": 72571,
+  "n_test_surveyed_cells": 65708,
+  "n_test_new_cells_surveyed": 8159,
+  "base_rate_all": 0.11249672734287801,
+  "base_rate_surveyed": 0.12417057283740184,
+  "metrics": [
+    {
+      "variant": "naive (uniform background)",
+      "roc_auc_all": 0.7431959035055173,
+      "pr_auc_all": 0.20498323973451832,
+      "roc_auc_surveyed": 0.7225702657739941,
+      "pr_auc_surveyed": 0.20985590517014047,
+      "spearman_pop_density": 0.35183890532120193,
+      "spearman_road_density": 0.37061532924652285,
+      "spearman_effort": 0.38177943350544796
+    },
+    {
+      "variant": "target-group background",
+      "roc_auc_all": 0.716601792791154,
+      "pr_auc_all": 0.1904331382819225,
+      "roc_auc_surveyed": 0.7008984213096152,
+      "pr_auc_surveyed": 0.19909244429203174,
+      "spearman_pop_density": 0.23448442305956854,
+      "spearman_road_density": 0.2706831889631962,
+      "spearman_effort": 0.1837427753844948
+    },
+    {
+      "variant": "inverse-effort weights",
+      "roc_auc_all": 0.7270463614203425,
+      "pr_auc_all": 0.18601085959826932,
+      "roc_auc_surveyed": 0.7054352799501079,
+      "pr_auc_surveyed": 0.1911187842209243,
+      "spearman_pop_density": 0.3588932820768009,
+      "spearman_road_density": 0.37545842470355434,
+      "spearman_effort": 0.34576302491281785
+    },
+    {
+      "variant": "bias covariates (raw prediction)",
+      "roc_auc_all": 0.763418612453126,
+      "pr_auc_all": 0.22129061371566713,
+      "roc_auc_surveyed": 0.7421198040710671,
+      "pr_auc_surveyed": 0.22499348576107076,
+      "spearman_pop_density": 0.4146021338013892,
+      "spearman_road_density": 0.42408826928527793,
+      "spearman_effort": 0.4540882711081483
+    },
+    {
+      "variant": "bias covariates (neutralised)",
+      "roc_auc_all": 0.7159998486778946,
+      "pr_auc_all": 0.17981602957681236,
+      "roc_auc_surveyed": 0.6959398189757523,
+      "pr_auc_surveyed": 0.18555229138442506,
+      "spearman_pop_density": 0.2919474871534255,
+      "spearman_road_density": 0.3194627401444151,
+      "spearman_effort": 0.34020013278999806
+    },
+    {
+      "variant": "target-group + inverse-effort weights",
+      "roc_auc_all": 0.7045207952531963,
+      "pr_auc_all": 0.18301873061546725,
+      "roc_auc_surveyed": 0.6870294714305084,
+      "pr_auc_surveyed": 0.19120651644341494,
+      "spearman_pop_density": 0.25604991301070557,
+      "spearman_road_density": 0.2917895098870468,
+      "spearman_effort": 0.15327433911360497
+    }
+  ]
+}

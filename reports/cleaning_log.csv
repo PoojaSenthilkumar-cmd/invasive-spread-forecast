@@ -1,0 +1,16 @@
+step,removed,remaining
+raw download,0,464199
+missing coordinates,0,464199
+invalid coordinates (out of range),0,464199
+zero coordinates (lat or lon == 0),3,464196
+GBIF geospatial issue flags,6,464190
+absence records (occurrenceStatus=ABSENT),6,464184
+"fossil/preserved/living specimens, material citations",62,464122
+not matched to focal species key,0,464122
+missing/unparseable eventDate,313,463809
+outside study period 2004-2025,70992,392817
+coordinate uncertainty > 5000 m,2637,390180
+coordinates rounded to <= 1 decimal place,16924,373256
+within 1000 m of a country centroid,28,373228
+outside region polygons,5333,367895
+duplicates (same coordinates + date),34919,332976
