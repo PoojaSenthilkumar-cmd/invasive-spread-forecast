@@ -1,0 +1,63 @@
+# Default configuration for the invasive-spread-forecast pipeline.
+species:
+  scientific_name: Vespa velutina
+  common_name: Asian hornet
+  gbif_taxon_key: 1311477
+
+region:
+  name: Western Europe
+  # ISO 3166-1 alpha-2 codes. Records and grid cells are restricted to these countries.
+  countries: [PT, ES, AD, FR, MC, BE, NL, LU, DE, CH, LI, GB, IE, JE, GG, IM]
+  # [min_lon, min_lat, max_lon, max_lat] (WGS84). Excludes Macaronesia (Azores, Madeira, Canaries).
+  bbox: [-11.0, 35.5, 15.5, 61.0]
+
+grid:
+  crs: EPSG:3035          # ETRS89-LAEA Europe (equal-area)
+  cell_size_m: 5000
+
+time:
+  window: year            # "year" or "half" (6-month windows)
+  start_year: 2004        # first documented European record (SW France, 2004)
+  end_year: 2025          # last complete year at time of download
+
+gbif:
+  api_url: https://api.gbif.org/v1
+  poll_interval_s: 60
+  max_wait_s: 21600
+  occurrence_format: SIMPLE_CSV
+  # Target-group effort cube (GBIF SQL download): all Insecta records excluding the focal species,
+  # aggregated per EEA 1 km reference-grid cell x year x half-year.
+  effort:
+    class_key: 216          # Insecta
+    hymenoptera_order_key: 1457
+    min_year: 2000
+    basis_of_record: [HUMAN_OBSERVATION, MACHINE_OBSERVATION, OCCURRENCE]
+
+inaturalist:
+  enabled: false          # iNaturalist research-grade obs are already in GBIF; see docs/data_sources.md
+  quality_grade: research
+
+cleaning:
+  max_coordinate_uncertainty_m: null   # null -> use grid.cell_size_m
+  country_centroid_buffer_m: 1000
+  capital_buffer_m: 1000
+  drop_basis_of_record: [FOSSIL_SPECIMEN, PRESERVED_SPECIMEN, LIVING_SPECIMEN, MATERIAL_CITATION]
+  drop_issues: [ZERO_COORDINATE, COORDINATE_INVALID, COORDINATE_OUT_OF_RANGE, COUNTRY_COORDINATE_MISMATCH, PRESUMED_SWAPPED_COORDINATE, PRESUMED_NEGATED_LATITUDE, PRESUMED_NEGATED_LONGITUDE]
+  drop_occurrence_status: [ABSENT]
+
+covariates:
+  worldclim_resolution: 2.5m
+  worldcover_overview_level: 4         # 10 m * 2^(level+1) = 320 m effective resolution
+  worldpop_year: 2020
+
+bias:
+  background_n: 20000                  # background points per variant for the bias diagnostic
+  effort_floor_quantile: 0.05          # floor for inverse-effort weights
+  seed: 42
+
+paths:
+  raw: data/raw
+  interim: data/interim
+  processed: data/processed
+  docs: docs
+  reports: reports
